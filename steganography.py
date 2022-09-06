@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
 
-NUM_LSB = 3  #8
+NUM_LSB = 8
+
+key = "W"
 
 # convert the message to binary
 def msg_to_bin(msg):  
@@ -16,33 +18,48 @@ def msg_to_bin(msg):
 
 # hide the data in the image
 def hide_data(img, secret_msg):
-    secret_msg += '########'  #Adding more than what we are looking for to be decoded
+    shift = 0
+    if(key == "H"):
+        shift = str(len(img))
+    else:
+        shift = str(len(img[0]))
+    print(shift)       
+    secret_msg += '#####'  #Adding more than what we are looking for to be decoded
     dataIndex = 0  
     secret_msg = msg_to_bin(secret_msg)
     dataLen = len(secret_msg)   
-     
-    for values in img: # values is rows  
-        for pixels in values:  # pixels is a column in a row
+    mod = 0
+    k = 0  # index in shift
+    for i in range(len(img)):
+        values = img[i]
+        j = 0
+        while j < len(values):
+            pixels = values[j]  
             # converting RGB values to binary format  
-            r, g, b = msg_to_bin(pixels)
+            px = msg_to_bin(pixels[mod])
+            pixels[mod] = int(px[:len(px)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
             # modifying the LSB only if there is data remaining to store  
-            if dataIndex < dataLen:
+            '''if dataIndex < dataLen:  
                 pixels[0] = int(r[:len(r)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
-                print("r: " + str(r))
-                print("pixels[0]: " + str(msg_to_bin(pixels[0])))
                 dataIndex += NUM_LSB
             if dataIndex < dataLen:   
                 pixels[1] = int(g[:len(g)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
                 dataIndex += NUM_LSB
-                print("g: " + str(g))
-                print("pixels[1]: " + str(msg_to_bin(pixels[1])))
             if dataIndex < dataLen:   
                 pixels[2] = int(b[:len(b)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
-                dataIndex += NUM_LSB
-                print("b: " + str(b))
-                print("pixels[2]: " + str(msg_to_bin(pixels[2])))
+                dataIndex += NUM_LSB  
             if dataIndex >= dataLen:  
-                break  
+                break '''
+            x = int(shift[k]) # current shift value
+            if x == 0:
+                x = 1    
+            j += int(x/3)
+            mod += x % 3
+            if mod >= 3:
+                j += 1
+                mod = mod % 3
+            k = (k+1) % len(shift) # update k
+
     return img  
 
 def show_data(img):  
@@ -60,6 +77,7 @@ def show_data(img):
     decodedData = ""  
     for bytes in allBytes:  
         decodedData += chr(int(bytes, 2))  
+        print(int(bytes, 2))
         # checking if we have reached the delimiter which is "#####"  
         if decodedData[-5:] == "#####":  
             break  
@@ -68,8 +86,7 @@ def show_data(img):
 
 def encodeText():  
     img_name = input("Enter image name (with extension): ")  
-    img = cv2.imread(img_name)
-    #print(len(img[0]))
+    img = cv2.imread(img_name)  
     data_name = input("Enter the name of the file that has your message to encode: ")
     f = open(data_name, "r")
     data = f.read()
@@ -82,35 +99,8 @@ def decodeText():
     # reading the image containing the hidden image  
     img_name = input("Enter the name of the Steganographic image that has to be decoded (with extension): ")  
     img = cv2.imread(img_name)  # reading the image using the imread() function  
-    m = ""
-    for values in img: # values is rows  
-        for pixels in values:  # pixels is a column in a row
-            # converting RGB values to binary format  
-            r, g, b = msg_to_bin(pixels)
-            # modifying the LSB only if there is data remaining to store
-            
-            m += r[-NUM_LSB:] + g[-NUM_LSB:] + b[-NUM_LSB:]
-            '''if dataIndex < dataLen:
-                pixels[0] = int(r[:len(r)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
-                print("r: " + str(r))
-                print("pixels[0]: " + str(msg_to_bin(pixels[0])))
-                dataIndex += NUM_LSB
-            if dataIndex < dataLen:   
-                pixels[1] = int(g[:len(g)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
-                dataIndex += NUM_LSB
-                print("g: " + str(g))
-                print("pixels[1]: " + str(msg_to_bin(pixels[1])))
-            if dataIndex < dataLen:   
-                pixels[2] = int(b[:len(b)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
-                dataIndex += NUM_LSB
-                print("b: " + str(b))
-                print("pixels[2]: " + str(msg_to_bin(pixels[2])))
-            if dataIndex >= dataLen:  
-                break'''  
-    #print(m[32])
-    #return img  
-    #text = show_data(img)
-    return m[0:33]  
+    text = show_data(img)
+    return text  
 
 def steganography():  
     n = int(input("1. Encode the data \n2. Decode the data \n Select the option: "))  
