@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
 
-NUM_LSB = 8
+NUM_LSB = 5
 
-key = "W"
+key = "H"
 
 # convert the message to binary
 def msg_to_bin(msg):  
@@ -22,34 +22,28 @@ def hide_data(img, secret_msg):
     if(key == "H"):
         shift = str(len(img))
     else:
-        shift = str(len(img[0]))
-    print(shift)       
+        shift = str(len(img[0]))      
     secret_msg += '#####'  #Adding more than what we are looking for to be decoded
     dataIndex = 0  
     secret_msg = msg_to_bin(secret_msg)
     dataLen = len(secret_msg)   
     mod = 0
     k = 0  # index in shift
+
     for i in range(len(img)):
+        k = (k+1) % len(shift) # update k to mess with people more
         values = img[i]
         j = 0
         while j < len(values):
             pixels = values[j]  
             # converting RGB values to binary format  
             px = msg_to_bin(pixels[mod])
-            pixels[mod] = int(px[:len(px)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
-            # modifying the LSB only if there is data remaining to store  
-            '''if dataIndex < dataLen:  
-                pixels[0] = int(r[:len(r)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
+            if dataIndex < dataLen: 
+                pixels[mod] = int(px[:len(px)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
                 dataIndex += NUM_LSB
-            if dataIndex < dataLen:   
-                pixels[1] = int(g[:len(g)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
-                dataIndex += NUM_LSB
-            if dataIndex < dataLen:   
-                pixels[2] = int(b[:len(b)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2)  
-                dataIndex += NUM_LSB  
             if dataIndex >= dataLen:  
-                break '''
+                break 
+            # modifying the LSB only if there is data remaining to store  
             x = int(shift[k]) # current shift value
             if x == 0:
                 x = 1    
@@ -62,27 +56,53 @@ def hide_data(img, secret_msg):
 
     return img  
 
-def show_data(img):  
+def show_data(img):
+    shift = 0
+    if(key == "H"):
+        shift = str(len(img))
+    else:
+        shift = str(len(img[0]))  
     bin_data = ""  
-    for values in img:  
+    mod = 0
+    k = 0  # index in shift
+    for i in range(len(img)):
+        k = (k+1) % len(shift) # update k to mess with people more
+        values = img[i]
+        j = 0
+        while j < len(values):
+            pixels = values[j]  
+            # converting RGB values to binary format  
+            px = msg_to_bin(pixels[mod])
+
+            bin_data += px[-NUM_LSB:]
+            
+            x = int(shift[k]) # current shift value
+            if x == 0:
+                x = 1    
+            j += int(x/3)
+            mod += x % 3
+            if mod >= 3:
+                j += 1
+                mod = mod % 3
+            k = (k+1) % len(shift) # update k
+    """ for values in img:  
         for pixels in values:  
             # converting the Red, Green, Blue values into binary format  
             r, g, b = msg_to_bin(pixels)  
             bin_data += r[-NUM_LSB:] 
             bin_data += g[-NUM_LSB:]   
-            bin_data += b[-NUM_LSB:]  
+            bin_data += b[-NUM_LSB:]   """
     # splitting by 8-bits  
     allBytes = [bin_data[i: i + 8] for i in range(0, len(bin_data), 8)]  
     # converting from bits to characters  
     decodedData = ""  
     for bytes in allBytes:  
-        decodedData += chr(int(bytes, 2))  
-        print(int(bytes, 2))
+        decodedData += chr(int(bytes, 2))
         # checking if we have reached the delimiter which is "#####"  
         if decodedData[-5:] == "#####":  
             break  
     # removing the delimiter to display the actual hidden message  
-    return decodedData[:-5]  
+    return decodedData[:-5]
 
 def encodeText():  
     img_name = input("Enter image name (with extension): ")  
