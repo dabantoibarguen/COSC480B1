@@ -25,50 +25,53 @@ def find_diff(b1, b2):
             # print(diff)
     return diff
 
+def find_diff_bit(b1, b2):
+    for i in range(len(b1)):
+        if (b1[i]!=b2[i]):
+            if i < 5:
+                print(b1, b2)
+            return (8-i)
+    return -1
+
 """
 img1: unmodified image
 img2: encoded image
 """
 def show_data(img1, img2):
+    lsb = 0
     diff = ""
-    # for row in range(len(img1)):
-    #     orig_row = img1[row]  # original row
-    #     enc_row = img2[row] # encoded row
-    #     for col in range(len(img1[0])):
-    #         # r,g,b = msg_to_bin(orig_row[col])
-    #         # print(r,g,b)
-    #         orig_px = msg_to_bin(orig_row[col])
-    #         # print(type(orig_px[0]))
-    #         enc_px = msg_to_bin(enc_row[col])
-    #         # print(len(orig_px))
-    #         # converting RGB values to binary format  
-    #         for i in range(len(orig_px)):
-    #             orig_bits = orig_px[i]
-    #             enc_bits = enc_px[i]
-    #             diff += find_diff(orig_bits, enc_bits) # because checking is already O(n)
-    bin_data1 = ""  
-    for values in img1:  
-        for pixels in values:  
-            # converting the Red, Green, Blue values into binary format  
-            r, g, b = msg_to_bin(pixels)  
-            bin_data1 += r
-            bin_data1 += g
-            bin_data1 += b
-            # modifying the LSB only if there is data remaining to store  
-    # print(diff)
-    bin_data2 = ""  
-    for values in img2:  
-        for pixels in values:  
-            # converting the Red, Green, Blue values into binary format  
-            r, g, b = msg_to_bin(pixels)  
-            bin_data2 += r
-            bin_data2 += g
-            bin_data2 += b
-    # diff = find_diff(bin_data1, bin_data2)
+    for row in range(len(img1)):
+        orig_row = img1[row]  # original row
+        enc_row = img2[row] # encoded row
 
-    for i in range(len(bin_data1)):
-        if bin_data1[i] != bin_data2[i]:
-            diff += bin_data2[i]
+        for col in range(len(img1[0])):
+            orig_px = msg_to_bin(orig_row[col])
+            enc_px = msg_to_bin(enc_row[col])
+
+            for i in range(len(orig_px)):
+                orig_bits = orig_px[i]
+                enc_bits = enc_px[i]
+                # if i==len(orig_px) - 1:
+                #     print(orig_bits, enc_bits)
+                if (orig_bits!=enc_bits):
+                    x = find_diff_bit(orig_bits, enc_bits)# index at which the bytes start looking different
+                    if (x > lsb) and (x - lsb < 3):
+                        lsb = x
+    #print(lsb)
+    diff = ""
+    for row in range(len(img1)):
+        orig_row = img1[row]  # original row
+        enc_row = img2[row] # encoded row
+        for col in range(len(img1[0])):
+            orig_px = msg_to_bin(orig_row[col])
+            enc_px = msg_to_bin(enc_row[col])
+
+            for i in range(len(orig_px)):
+                orig_bits = orig_px[i]
+                enc_bits = enc_px[i]
+                if (orig_bits != enc_bits):
+                    diff += enc_bits[-lsb:]
+
 
     allBytes = [diff[i: i + 8] for i in range(0, len(diff), 8)]  
     # Loop that goes through every single pixel for both image
@@ -85,6 +88,5 @@ def main():
     img2 = cv2.imread(img2_name)  # reading the image using the imread() function  
     text = show_data(img1, img2)
     print(text)
-    return
 
 main()
