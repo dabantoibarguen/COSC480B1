@@ -1,3 +1,6 @@
+# COSC 480B HW 1 Part 1
+# Group Members: Diego Abanto, Jin Sohn, Sara Alam
+
 import numpy as np
 import cv2
 
@@ -27,34 +30,39 @@ def hide_data(img, secret_msg):
     dataIndex = 0  
     secret_msg = msg_to_bin(secret_msg)
     dataLen = len(secret_msg)   
-    mod = 0
-    k = 0  # index in shift
+    mod = 0 # index of the pixel inside a cell, one of r, g or b
+    k = 0  # index in the shift number, keeps track of which digit is being used to shift
 
     for i in range(len(img)):
-        k = (k+1) % len(shift) # update k to mess with people more
+        k = (k+1) % len(shift) # update k to move to the next digit in the shift number
         values = img[i]
         j = 0
         while j < len(values):
             pixels = values[j]  
             # converting RGB values to binary format  
             px = msg_to_bin(pixels[mod])
+
+            # modifying the LSB only if there is data remaining to store
             if dataIndex < dataLen: 
                 pixels[mod] = int(px[:len(px)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
                 dataIndex += NUM_LSB
+
             if dataIndex >= dataLen:  
-                break 
-            # modifying the LSB only if there is data remaining to store  
+                break
+
+              
             x = int(shift[k]) # current shift value
             if (j+int(x/3)) > len(values):
                 break
             if x == 0:
-                x = 1    
-            j += int(x/3)
+                x = 1
+            # update mod and j    
+            j += int(x/3) # because j is the cell number and x indicates pixel number
             mod += x % 3
             if mod >= 3:
                 j += 1
                 mod = mod % 3
-            k = (k+1) % len(shift) # update k
+
         if dataIndex >= dataLen:  
             break 
 
@@ -66,11 +74,12 @@ def show_data(img):
         shift = str(len(img))
     else:
         shift = str(len(img[0]))  
-    bin_data = ""  
+    bin_data = ""
+    
     mod = 0
     k = 0  # index in shift
     for i in range(len(img)):
-        k = (k+1) % len(shift) # update k to mess with people more
+        k = (k+1) % len(shift) # update k
         values = img[i]
         j = 0
         while j < len(values):
@@ -90,7 +99,6 @@ def show_data(img):
             if mod >= 3:
                 j += 1
                 mod = mod % 3
-            k = (k+1) % len(shift) # update k
     """ for values in img:  
         for pixels in values:  
             # converting the Red, Green, Blue values into binary format  
@@ -98,7 +106,6 @@ def show_data(img):
             bin_data += r[-NUM_LSB:] 
             bin_data += g[-NUM_LSB:]   
             bin_data += b[-NUM_LSB:]   """
-    # print(bin_data)
     # splitting by 8-bits  
     allBytes = [bin_data[i: i + 8] for i in range(0, len(bin_data), 8)]  
     # converting from bits to characters  
@@ -113,7 +120,7 @@ def show_data(img):
 
 def encodeText():  
     img_name = input("Enter image name (with extension): ")  
-    img = cv2.imread(img_name)  
+    img = cv2.imread(img_name)
     data_name = input("Enter the name of the file that has your message to encode: ")
     f = open(data_name, "r")
     data = f.read()
