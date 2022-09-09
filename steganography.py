@@ -16,43 +16,58 @@ def msg_to_bin(msg):
     else:  
         raise TypeError("Input type not supported")  
 
-# hide the data in the image
+"""
+Embeds payload into carrier image.
+img: carrier image
+secret_msg: message we seek to embed in carrier image
+"""
 def hide_data(img, secret_msg):
     shift = 0
+
+    # Determines the shift offset.
+    # ex.) For 50x38 image
+    # if key is "H", then length is 38
+    # otherwise, length is 50
     if(key == "H"):
         shift = str(len(img))
     else:
-        shift = str(len(img[0]))      
+        shift = str(len(img[0]))
+        
     secret_msg += '#####'  #Adding more than what we are looking for to be decoded
     dataIndex = 0  
     secret_msg = msg_to_bin(secret_msg)
-    dataLen = len(secret_msg)   
+    dataLen = len(secret_msg)
+
     mod = 0
     k = 0  # index in shift
+    for i in range(len(img)):   # For each row...
+        k = (k+1) % len(shift)  # update k to mess with people more
+        # values: array of row pixels
+        values = img[i]         # Get each row and store in values
 
-    for i in range(len(img)):
-        k = (k+1) % len(shift) # update k to mess with people more
-        values = img[i]
         j = 0
-        while j < len(values):
-            pixels = values[j]  
+        while j < len(values):  # For each pixel in row...
+            # pixels: RGB value tuple per pixel
+            pixels = values[j]  # Get each pixel RGB value tuple
             # converting RGB values to binary format  
             px = msg_to_bin(pixels[mod])
             if dataIndex < dataLen: 
+                # Embedding:
+                # embed message into LSB (Least Significant Bits)
                 pixels[mod] = int(px[:len(px)-(NUM_LSB)] + secret_msg[dataIndex:dataIndex+NUM_LSB], 2) 
                 dataIndex += NUM_LSB
             if dataIndex >= dataLen:  
                 break 
             # modifying the LSB only if there is data remaining to store  
-            x = int(shift[k]) # current shift value
+            x = int(shift[k])   # current shift value
             if x == 0:
                 x = 1    
-            j += int(x/3)
-            mod += x % 3
+            j += int(x/3)       # select pixel
+            mod += x % 3        # select cell in each pixel (remainder)
             if mod >= 3:
                 j += 1
                 mod = mod % 3
-            k = (k+1) % len(shift) # update k
+            k = (k+1) % len(shift) # update k (height or weight value indexing)
 
     return img  
 
