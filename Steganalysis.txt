@@ -1,0 +1,29 @@
+﻿COSC 480B
+Names: Diego Abanto, Jin Sohn, Sara Alam
+Date: 9/8/2022
+
+
+Homework 2 Part 2: Steganalysis
+
+
+Assumption: We have both the original, unmodified image and the encoded image.
+
+
+Approach: 
+1. Infer how many Least Significant Bits (LSBs) were modified for the encryption.
+We make a first pass through all the pixels of both the original image and the encoded image, comparing corresponding pairs of pixels.If a pixel is different in the two images, we save the most significant bit at which the pixels start looking different. We maintain a dictionary which stores every value of this starting different bit and the number of times changes begin at this bit (i.e its frequency). We figure out the LSB by subtracting the number of iterations it takes to find a difference in two binary codes from 8. Then, we use the dictionary to find the most frequent LSBs key, to use in our decoding.
+
+
+2. Infer “skips”.
+The encoding algorithm may have skipped pixels to hide the message well. So every time a pixel differs from its counterpart in the original image, we track how many pixels were found to be unmodified before this difference. We maintain a dictionary that stores each possible number of skipped pixels and the frequency at which they occur.
+We do this to read the bits that are too well-hidden to be detected. Sometimes the encoding might not change the original bits enough i.e. the LSBs of the pixel match the ones used to hide the message. However, if the encoder used a common “skip”, or interval at which pixels were chosen for encoding,  then we can read the pixels that were encoded without major modifications. Although this approach results in the inclusion of some noise, it ensures we do not miss necessary bits to decode the message. We pick the most frequent skip we have seen for our search.
+
+
+3. Infer an estimated length of the encoded message
+While iterating through the two images to figure out the LSBs and the “skips'' (if any), we also keep track of the last row and column where a difference was detected. Our algorithm works from top left to bottom right, which means that we look at every column up of each row before the last row where a difference was detected. Once we arrive at the last row, we use the same criteria to get the bits in either different pixels or by using the skip pattern. For this row we stop early if 1. We have arrived at the last column where a change was seen. 2. If the total bits we have collected are a multiple of 8 (to ensure we do not accidentally miss exact matches between the LSBs and the message bits, we keep using the skip criteria until we have a complete message in binary). 
+
+
+4. Use inferred LSBs and skips to get relevant bits out of the pixels that were encoded. Accumulate these bits in one string. We then break the string of bits in bytes to later translate into characters.
+
+
+5. Convert the bytes into characters and accumulate this in a string. Return this string as the final decoded message.

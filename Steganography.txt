@@ -1,0 +1,31 @@
+﻿COSC 480B
+Names: Diego Abanto, Jin Sohn, Sara Alam
+Date: 9/8/2022
+
+
+Homework 2 Part 1: Steganography
+
+
+Encryption Algorithm
+
+
+1. Determine one character key. If the key is ‘h’, the height of the input image is used as the shift number for the following Vigenere encoding. Otherwise, the width is the shift number.
+2. Iterate through every pixel starting from the top left.
+3. Encode the first pixel, then skip over x pixels, where x is the first digit of the shift number.
+4. Encode the next pixel after shifting, then skip y pixels, where y is the next digit in the shift number.
+5. When changing rows, an additional digit can be moved over on the shift number. For example, if the shift number is two digits long, there will be two shifts using the same digit due to this additional move . After much consideration, we removed this step as it made our steganalysis code less effective unlike the version without this additional shift. It is worth noting that this additional step did allow its unique decoder to retrieve the message, which means this would add a significant amount of security to the algorithm. The line is left commented in the code for encoder and decoder, in case one is able to discover this sudden shift with a general steganalysis approach.
+
+
+6. Pick pixels to encode in this manner until the secret message is all encoded.
+
+
+
+
+
+Quantifying Complexity
+
+
+When we use the 8 least significant bits (so, all the bits) to hide our message, a pattern will show up as columns of noise near the top of the image. The columns are slightly different depending on the original image, since the shift depends on one of the dimensions of the image. Knowing that the shift works, the algorithm now uses the 3 least significant bits (LSB) to hide these encoded columns (they were waves when step 5 was part of the algorithm). 
+
+
+If the decoder has access to the unmodified image, it would not take long to find the different pixels and figure out the pattern as there is no scrambling on the order of the message. A general steganalysis should be able to resolve it or at least find sections of the message in under an hour. Being unaware of the message poses a different challenge, as the decoder will not be able to use just one constant shift to find the encoded bits, but will need to use an approach similar to deciphering a vigenere cipher by finding the interwoven shift pattern. At least a few hours will be needed to test out many different combinations, less if the decoder figures out the number of LSB used. By not having access to the unmodified image nor the message itself, the pixels will be harder to find with images with varied digits in their width and length. For images such as 100x100 or 111x1111 it will be easier to find clusters of encoded pixels towards the top (the pixels are encoded top left to bottom right). Otherwise, dimensions like 1728x375 allow this encoding to separate the pixels enough to make efforts to decode the message significantly harder. As some values will match in their 3 LSB with the bits used to hide the message, the pattern is even harder to figure out. Our message only encodes up to a certain area, which helps the decoding process as a significant section of an image may be ignored. This means at least the LSB and approximate length of the message can be figured in a couple of hours at the most. Figuring out the pattern and the different possible keys (width and height) would require multiple samples of images, as having just a few would make it seem like the key is random each time (unless they somehow decide to look at the dimensions). This effort would take a few days, as it would require comparing different steganographic images over time, and even then recovering the message precisely would take many more trials, as the lsb does not need to remain as 3 for each one. If we are assuming the experienced decoder does not have a general decoder to figure out LSB or length from the beginning, add approximately 3-5 hours to each quantity, as it took our group 2 days (or around 6 hours) to make one that figures out the lsb, the shifts (since we knew there were shifts) and when to stop decoding (length of the message).
