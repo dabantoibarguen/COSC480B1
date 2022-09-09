@@ -4,7 +4,7 @@
 import numpy as np
 import cv2
 
-NUM_LSB = 3
+NUM_LSB = 8
 
 key = "H"
 
@@ -34,7 +34,7 @@ def hide_data(img, secret_msg):
     k = 0  # index in the shift number, keeps track of which digit is being used to shift
 
     for i in range(len(img)):
-        k = (k+1) % len(shift) # update k to move to the next digit in the shift number
+        #k = (k+1) % len(shift) # update k to move to the next digit in the shift number
         values = img[i]
         j = 0
         while j < len(values):
@@ -62,7 +62,7 @@ def hide_data(img, secret_msg):
             if mod >= 3:
                 j += 1
                 mod = mod % 3
-
+            k = (k+1) % len(shift) # update k to move to the next digit in the shift number
         if dataIndex >= dataLen:  
             break 
 
@@ -79,7 +79,7 @@ def show_data(img):
     mod = 0
     k = 0  # index in shift
     for i in range(len(img)):
-        k = (k+1) % len(shift) # update k
+        #k = (k+1) % len(shift) # update k
         values = img[i]
         j = 0
         while j < len(values):
@@ -99,6 +99,7 @@ def show_data(img):
             if mod >= 3:
                 j += 1
                 mod = mod % 3
+            k = (k+1) % len(shift) # update k to move to the next digit in the shift number
     """ for values in img:  
         for pixels in values:  
             # converting the Red, Green, Blue values into binary format  
